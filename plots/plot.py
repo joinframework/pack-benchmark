@@ -33,15 +33,8 @@ _FAMILY_COLORS = {
 }
 _LIB_COLORS: dict[str, tuple] = {}
 
-ZERO_COPY_HATCH = "///"
-
 def _family(name: str) -> str:
     return name.split(" (")[0].split("/")[0]
-
-def _set_hatches(bars, libs: list[str]) -> None:
-    for bar, lib in zip(bars, libs):
-        if "(zero-copy)" in lib:
-            bar.set_hatch(ZERO_COPY_HATCH)
 
 def _lib_color(name: str) -> tuple:
     if name not in _LIB_COLORS:
@@ -89,7 +82,6 @@ def _barh_ax(ax: plt.Axes, summary: pd.Series, title: str) -> None:
     values = summary.tolist()
     colors = [_lib_color(lib) for lib in libs]
     bars = ax.barh(libs, values, color=colors, alpha=0.87, height=0.65, edgecolor="white")
-    _set_hatches(bars, libs)
     ax.bar_label(bars, labels=[f"{v:.3g}" for v in values], padding=4, fontsize=8)
     ax.set_title(title, fontsize=11, fontweight="bold", loc="left", pad=6)
     ax.set_xlabel("Time (ms)")
@@ -212,8 +204,7 @@ def plot_conformance(conf_path: str, output_dir: Path) -> None:
         vals   = [r[c] for r in rows]
         colors = [_lib_color(lib) for lib in libs]
 
-        bars = ax.barh(libs, vals, color=colors, alpha=0.87, height=0.65, edgecolor="white")
-        _set_hatches(bars, libs)
+        ax.barh(libs, vals, color=colors, alpha=0.87, height=0.65, edgecolor="white")
         for i, v in enumerate(vals):
             ax.text(min(v + 0.8, 101), i, f"{v:.0f}%", va="center", fontsize=8)
 

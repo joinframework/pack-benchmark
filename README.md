@@ -38,7 +38,7 @@ Companion of [json-benchmark](https://github.com/joinframework/json-benchmark), 
 
 All dependencies are fetched automatically via CMake FetchContent, at pinned versions (`cmake/deps.cmake`).
 
-Libraries fall into two categories, marked in the plots by hatched bars for the zero-copy ones:
+Libraries fall into two categories, the zero-copy ones being labelled `(zero-copy)` in the plots:
 - **copying** — the DOM owns its strings, binaries and extension payloads, and the input buffer can be released after parse;
 - **zero-copy** — the DOM references the input buffer for strings, binaries and extension payloads, which must outlive the DOM. Parse then does no string copy, and statistics or serialize read the payloads from the input. Their figures are not like-for-like with the copying libraries.
 
