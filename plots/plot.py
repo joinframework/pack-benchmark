@@ -23,7 +23,14 @@ LIBRARY_ORDER = list(LIBRARY_LABELS.values())
 
 DATASET_ORDER = ["Canada", "Citm", "Twitter"]
 
-_PALETTE = [c for c in plt.rcParams["axes.prop_cycle"].by_key()["color"] if c != "#7f7f7f"] + ["#1b9e77", "#e6ab02", "#e7298a"]
+_FAMILY_COLORS = {
+    "join":        "#2ca02c",
+    "jsoncons":    "#d62728",
+    "mpack":       "#9467bd",
+    "msgpack-cxx": "#1f77b4",
+    "nlohmann":    "#8c564b",
+    "taocpp":      "#e6ab02",
+}
 _LIB_COLORS: dict[str, tuple] = {}
 
 ZERO_COPY_HATCH = "///"
@@ -39,11 +46,9 @@ def _set_hatches(bars, libs: list[str]) -> None:
 def _lib_color(name: str) -> tuple:
     if name not in _LIB_COLORS:
         family   = _family(name)
-        families = list(dict.fromkeys(_family(lib) for lib in LIBRARY_ORDER))
-        idx      = families.index(family) if family in families else len(families) + len(_LIB_COLORS)
         variants = sorted((lib for lib in LIBRARY_ORDER if _family(lib) == family), key=lambda lib: lib != family)
         rank     = variants.index(name) if name in variants else 0
-        r, g, b  = to_rgb(_PALETTE[idx % len(_PALETTE)])
+        r, g, b  = to_rgb(_FAMILY_COLORS.get(family, "#7f7f7f"))
         t        = 0.55 * rank / max(len(variants), 1)
         _LIB_COLORS[name] = (r + (1 - r) * t, g + (1 - g) * t, b + (1 - b) * t)
     return _LIB_COLORS[name]
