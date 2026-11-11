@@ -26,17 +26,17 @@ Companion of [json-benchmark](https://github.com/joinframework/json-benchmark), 
 
 ## Libraries
 
-| Library | Parse | Serialize | Statistics | Conformance |
-|---------|-------|-----------|------------|-------------|
-| [Join](https://github.com/joinframework/join) | ✓ | ✓ | ✓ | ✓ |
-| [jsoncons](https://github.com/danielaparker/jsoncons) | ✓ | ✓ | ✓ | ✓ |
-| [MPack](https://github.com/ludocode/mpack) (zero-copy) | ✓ | ✓ | ✓ | ✓ |
-| [msgpack-cxx](https://github.com/msgpack/msgpack-c/tree/cpp_master) (default) | ✓ | ✓ | ✓ | ✓ |
-| [msgpack-cxx](https://github.com/msgpack/msgpack-c/tree/cpp_master) (zero-copy) | ✓ | ✓ | ✓ | ✓ |
-| [nlohmann/json](https://github.com/nlohmann/json) | ✓ | ✓ | ✓ | ✓ |
-| [taocpp/json](https://github.com/taocpp/json) | ✓ | ✓ | ✓ | ✓ |
+| Library | Version | Parse | Serialize | Statistics | Conformance |
+|---------|---------|-------|-----------|------------|-------------|
+| [Join](https://github.com/joinframework/join) | `main` (e4bd643) | ✓ | ✓ | ✓ | ✓ |
+| [jsoncons](https://github.com/danielaparker/jsoncons) | 0.176.0 | ✓ | ✓ | ✓ | ✓ |
+| [MPack](https://github.com/ludocode/mpack) (zero-copy) | 1.1.1 | ✓ | ✓ | ✓ | ✓ |
+| [msgpack-cxx](https://github.com/msgpack/msgpack-c/tree/cpp_master) (default) | 7.0.0 | ✓ | ✓ | ✓ | ✓ |
+| [msgpack-cxx](https://github.com/msgpack/msgpack-c/tree/cpp_master) (zero-copy) | 7.0.0 | ✓ | ✓ | ✓ | ✓ |
+| [nlohmann/json](https://github.com/nlohmann/json) | 3.11.3 | ✓ | ✓ | ✓ | ✓ |
+| [taocpp/json](https://github.com/taocpp/json) | 1.0.0-beta.14 | ✓ | ✓ | ✓ | ✓ |
 
-All dependencies are fetched automatically via CMake FetchContent, at pinned versions (`cmake/deps.cmake`).
+All dependencies are fetched automatically via CMake FetchContent, at pinned versions (`cmake/deps.cmake`); Join is taken from its `main` branch, and taocpp/json uses PEGTL 3.2.8.
 
 Libraries fall into two categories, the zero-copy ones being labelled `(zero-copy)` in the plots:
 - **copying** — the DOM owns its strings, binaries and extension payloads, and the input buffer can be released after parse;
