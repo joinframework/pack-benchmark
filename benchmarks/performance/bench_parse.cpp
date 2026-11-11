@@ -27,6 +27,11 @@ static void BM_Parse (benchmark::State& state, const std::string* msgpack)
         auto doc = Adapter::parse (*msgpack);
         benchmark::DoNotOptimize (doc);
         state.PauseTiming ();
+        if (!doc)
+        {
+            state.SkipWithError ("Parse failed");
+            break;
+        }
         doc.reset ();
         state.ResumeTiming ();
     }

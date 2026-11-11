@@ -29,16 +29,16 @@ Companion of [json-benchmark](https://github.com/joinframework/json-benchmark), 
 | Library | Version | Parse | Serialize | Statistics | Conformance |
 |---------|---------|-------|-----------|------------|-------------|
 | [Join](https://github.com/joinframework/join) | `main` (e4bd643) | ✓ | ✓ | ✓ | ✓ |
-| [jsoncons](https://github.com/danielaparker/jsoncons) | 0.176.0 | ✓ | ✓ | ✓ | ✓ |
+| [jsoncons](https://github.com/danielaparker/jsoncons) | 1.10.0 | ✓ | ✓ | ✓ | ✓ |
 | [MPack](https://github.com/ludocode/mpack) (zero-copy) | 1.1.1 | ✓ | ✓ | ✓ | ✓ |
-| [msgpack-cxx](https://github.com/msgpack/msgpack-c/tree/cpp_master) (default) | 7.0.0 | ✓ | ✓ | ✓ | ✓ |
-| [msgpack-cxx](https://github.com/msgpack/msgpack-c/tree/cpp_master) (zero-copy) | 7.0.0 | ✓ | ✓ | ✓ | ✓ |
-| [nlohmann/json](https://github.com/nlohmann/json) | 3.11.3 | ✓ | ✓ | ✓ | ✓ |
+| [msgpack-cxx](https://github.com/msgpack/msgpack-c/tree/cpp_master) (default) | 9.0.0 | ✓ | ✓ | ✓ | ✓ |
+| [msgpack-cxx](https://github.com/msgpack/msgpack-c/tree/cpp_master) (zero-copy) | 9.0.0 | ✓ | ✓ | ✓ | ✓ |
+| [nlohmann/json](https://github.com/nlohmann/json) | 3.12.0 | ✓ | ✓ | ✓ | ✓ |
 | [taocpp/json](https://github.com/taocpp/json) | 1.0.0-beta.14 | ✓ | ✓ | ✓ | ✓ |
 
-All dependencies are fetched automatically via CMake FetchContent, at pinned versions (`cmake/deps.cmake`); Join is taken from its `main` branch, and taocpp/json uses PEGTL 3.2.8.
+All dependencies are fetched automatically via CMake FetchContent, pinned to their latest release (Join is taken from its main branch; taocpp/json uses PEGTL 3.2.9).
 
-Libraries fall into two categories, the zero-copy ones being labelled `(zero-copy)` in the plots:
+Libraries fall into two categories, the zero-copy ones being labelled `/zero-copy` in the plots:
 - **copying** — the DOM owns its strings, binaries and extension payloads, and the input buffer can be released after parse;
 - **zero-copy** — the DOM references the input buffer for strings, binaries and extension payloads, which must outlive the DOM. Parse then does no string copy, and statistics or serialize read the payloads from the input. Their figures are not like-for-like with the copying libraries.
 
@@ -200,7 +200,7 @@ In addition, an **output check** guards the performance benchmarks: on each data
 ## Notes
 
 - `-march=native`: CPU-specific SIMD optimisations. Results are not portable across machines.
-- Every binary is compiled as C++20 (`CMAKE_CXX_STANDARD 20`), the standard Join requires.
+- Every binary is compiled as C++17, except those linked against Join (`bench_*_join` and `conformance`), compiled as C++20, the standard Join requires.
 - Each library is measured in its own binary (`bench_<operation>_<library>`), linked only against that library, and each repetition runs in a new process, interleaved across libraries (see json-benchmark for the measurements behind both choices).
 - The allocator policy is fixed for every library (`GLIBC_TUNABLES`: 32 MB `mmap` threshold, trimming disabled), and `--benchmark_min_warmup_time=0.5` lets the heap reach its steady-state size before measurement. Each benchmark reports its page faults per iteration as the `minflt` counter; `plot.py` warns when it is not zero.
 - Benchmarks are pinned with `taskset -c $BENCH_CPU` (default 2). They are single-threaded, so pinning the process pins the measured thread.
@@ -221,10 +221,10 @@ All figures below come from a single run on this machine (3 repetitions, each in
 | RAM | 16 GiB |
 | OS | Ubuntu 26.04.1 LTS, kernel 7.0.0-42-generic |
 | Toolchain | GCC 15.2.0, CMake 4.2.3 |
-| Compile flags | `-O3 -DNDEBUG -march=native -std=c++20`; `MSGPACK_NO_BOOST` for msgpack-cxx, `MPACK_EXTENSIONS=1` for MPack |
+| Compile flags | `-O3 -DNDEBUG -march=native -std=c++17` (`-std=c++20` for Join, which requires it); `MSGPACK_NO_BOOST` for msgpack-cxx, `MPACK_EXTENSIONS=1` for MPack |
 | Join | `main` at `e4bd643` (2026-11-11) |
 | Pinning | `taskset -c 2` (physical core, SMT sibling 10) |
-| Conditions | idle machine, 3 repetitions, run started once the CPU was back to its rated clock (3688 MHz); no page fault in steady state; spread across repetitions below 2% for 42 of 63 benchmarks and below 5% for 56; outliers are jsoncons serialize (25% on `twitter.msgpack`, 11% on `citm_catalog.msgpack`), taocpp/json statistics on `citm_catalog.msgpack` (7%) and msgpack-cxx statistics on `canada.msgpack` (5–7%) |
+| Conditions | idle machine, 3 repetitions, run started once the CPU was back to its rated clock (3700 MHz); no page fault in steady state except nlohmann/json serialize on `canada.msgpack` (0.003 per iteration); spread across repetitions below 2% for 50 of 63 benchmarks and below 5% for 56; outliers are jsoncons serialize (58% on `twitter.msgpack`, 14% on `citm_catalog.msgpack`), msgpack-cxx serialize on `canada.msgpack` (13%) and jsoncons statistics on `canada.msgpack` (9%) |
 
 ## Results
 
@@ -236,11 +236,11 @@ Measured on the machine above. Re-run `scripts/run_bench.sh` to reproduce on oth
 
 ![Serialize](plots/performance_serialize.png)
 
-**Parse**: **MPack** leads at 1.75 ms, followed by **msgpack-cxx** zero-copy (2.05 ms) and default (2.16 ms); both msgpack-cxx variants take the same 1.21 ms on `canada.msgpack`, which holds almost no strings, and differ on `twitter.msgpack` (0.28 against 0.35 ms), where the default variant copies every string into its zone. **Join** (2.83 ms), the fastest copying DOM after msgpack-cxx default, is 1.3× behind it and 1.6× behind MPack. The JSON libraries with a MessagePack codec are much slower: **taocpp/json** (9.38 ms), then **jsoncons** (20.6 ms) and **nlohmann/json** (24.1 ms), 12–14× MPack.
+**Parse**: **MPack** leads at 1.72 ms, followed by **msgpack-cxx** zero-copy (2.04 ms) and default (2.22 ms); both msgpack-cxx variants take the same 1.22 ms on `canada.msgpack`, which holds almost no strings, and differ on `twitter.msgpack` (0.29 against 0.37 ms), where the default variant copies every string into its zone. **Join** (2.82 ms), the fastest copying DOM after msgpack-cxx default, is 1.3× behind it and 1.6× behind MPack. The JSON libraries with a MessagePack codec are much slower: **taocpp/json** (8.96 ms), then **jsoncons** (18.5 ms) and **nlohmann/json** (26.1 ms), 11–15× MPack.
 
-**Serialize**: **Join** leads at 1.46 ms, with both **msgpack-cxx** variants (1.51 ms) right behind. **MPack** (2.75 ms) is slower: its tree is read-only, so it is written back node by node through the `mpack_writer_t` API. **nlohmann/json** (4.51 ms) and **taocpp/json** (4.81 ms) follow, and **jsoncons** (11.1 ms) is the slowest, with the largest spread across processes (up to 25%).
+**Serialize**: **Join** leads at 1.50 ms, ahead of both **msgpack-cxx** variants (1.83 ms). **MPack** (2.77 ms) is slower: its tree is read-only, so it is written back node by node through the `mpack_writer_t` API. **nlohmann/json** (4.76 ms) and **taocpp/json** (4.85 ms) follow, and **jsoncons** (7.29 ms) is the slowest, with the largest spread across processes (up to 58%).
 
-**Statistics**: both **msgpack-cxx** variants lead at 0.52 ms, followed by **Join** (0.62 ms; 0.38 against 0.28 ms on `canada.msgpack`, on par elsewhere). **jsoncons** (0.82 ms), the fastest of all on `twitter.msgpack` (0.086 ms), and **taocpp/json** (0.92 ms) come next. **MPack** (1.49 ms) pays for its node API, every type, length and child being read through a checked function call into the compiled C library, and **nlohmann/json** (1.84 ms) is the slowest.
+**Statistics**: both **msgpack-cxx** variants lead at 0.51 ms, followed by **Join** (0.62 ms; 0.38 against 0.27 ms on `canada.msgpack`, on par elsewhere). **taocpp/json** (0.84 ms) and **jsoncons** (0.92 ms) come next, then **nlohmann/json** (1.45 ms). **MPack** (1.53 ms) is the slowest: it pays for its node API, every type, length and child being read through a checked function call into the compiled C library.
 
 ### Conformance
 
@@ -254,18 +254,18 @@ Measured on the machine above. Re-run `scripts/run_bench.sh` to reproduce on oth
 
 **Reject**: every library rejects all 35 malformed inputs.
 
-Over the 195 scored cases, **Join**, **MPack** and both **msgpack-cxx** variants score 195, **jsoncons** 186, **nlohmann/json** 177 and **taocpp/json** 159. The output check passed for every library on the three datasets.
+Over the 195 scored cases, **Join**, **MPack** and both **msgpack-cxx** variants score 195, **jsoncons** 186, **nlohmann/json** 177 and **taocpp/json** 153. The output check passed for every library on the three datasets.
 
 ### Conclusion
 
 Summary per library, with the limitations measured or documented for each:
 
-- **MPack**: perfect conformance (195/195), fastest parse (1.75 ms). Limitations: zero-copy only, so the input buffer must outlive the DOM; read-only node tree, written back node by node (serialize 2.75 ms, 1.9× Join); statistics 1.49 ms, 2.9× msgpack-cxx; C API.
-- **msgpack-cxx**: perfect conformance (195/195); parse 2.16 ms (2.05 ms zero-copy), serialize 1.51 ms, fastest statistics (0.52 ms). Limitations: `msgpack::object` is a plain tagged union allocated in a zone, whose maps are flat arrays of key/value pairs with no lookup by key; the zero-copy variant ties the DOM to the input buffer; 5–7% spread on `canada.msgpack` statistics.
-- **Join**: perfect conformance (195/195); fastest serialize (1.46 ms), parse 2.83 ms, statistics 0.62 ms, with a DOM that owns its strings and supports keys of any type. Limitations: requires C++20; output only through `std::ostream`; parse 1.3× msgpack-cxx default and 1.6× MPack; statistics 1.4× msgpack-cxx on `canada.msgpack`.
-- **taocpp/json**: parse 9.38 ms and statistics 0.92 ms, the fastest of the JSON-based libraries for parse. Limitations: rejects extension types and non-string keys (159/195); output sorted by key; versioned as a beta (1.0.0-beta.14).
-- **jsoncons**: accepts every valid input (186/195); statistics 0.82 ms. Limitations: non-string keys are converted to text (0/9 roundtrip); parse 20.6 ms, 12× MPack; slowest serialize (11.1 ms), with up to 25% spread across processes; output sorted by key.
-- **nlohmann/json**: roundtrips binaries and extensions with their subtype (177/195). Limitations: rejects non-string keys; slowest parse (24.1 ms, 14× MPack) and statistics (1.84 ms); output sorted by key.
+- **MPack**: perfect conformance (195/195), fastest parse (1.72 ms). Limitations: zero-copy only, so the input buffer must outlive the DOM; read-only node tree, written back node by node (serialize 2.77 ms, 1.9× Join); slowest statistics (1.53 ms, 3× msgpack-cxx); C API.
+- **msgpack-cxx**: perfect conformance (195/195); parse 2.22 ms (2.04 ms zero-copy), serialize 1.83 ms, fastest statistics (0.51 ms). Limitations: `msgpack::object` is a plain tagged union allocated in a zone, whose maps are flat arrays of key/value pairs with no lookup by key; the zero-copy variant ties the DOM to the input buffer; 13% spread on `canada.msgpack` serialize.
+- **Join**: perfect conformance (195/195); fastest serialize (1.50 ms), parse 2.82 ms, statistics 0.62 ms, with a DOM that owns its strings and supports keys of any type. Limitations: requires C++20; output only through `std::ostream`; parse 1.3× msgpack-cxx default and 1.6× MPack; statistics 1.4× msgpack-cxx on `canada.msgpack`.
+- **taocpp/json**: parse 8.96 ms and statistics 0.84 ms, the fastest of the JSON-based libraries for both. Limitations: rejects extension types and non-string keys (153/195); output sorted by key; versioned as a beta (1.0.0-beta.14).
+- **jsoncons**: accepts every valid input (186/195). Limitations: non-string keys are converted to text (0/9 roundtrip); parse 18.5 ms, 11× MPack; slowest serialize (7.29 ms), with up to 58% spread across processes; output sorted by key.
+- **nlohmann/json**: roundtrips binaries and extensions with their subtype (177/195). Limitations: rejects non-string keys; slowest parse (26.1 ms, 15× MPack); statistics 1.45 ms; output sorted by key.
 
 ## License
 

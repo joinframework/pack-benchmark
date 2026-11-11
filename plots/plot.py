@@ -12,9 +12,9 @@ from matplotlib.colors import to_rgb
 LIBRARY_LABELS = {
     "JoinAdapter":          "join",
     "JsonConsAdapter":      "jsoncons",
-    "MpackZeroCopyAdapter": "mpack (zero-copy)",
+    "MpackZeroCopyAdapter": "mpack/zero-copy",
     "MsgpackCxxAdapter":    "msgpack-cxx",
-    "MsgpackCxxRefAdapter": "msgpack-cxx (zero-copy)",
+    "MsgpackCxxRefAdapter": "msgpack-cxx/zero-copy",
     "NlohmannAdapter":      "nlohmann",
     "TaoCppAdapter":        "taocpp",
 }

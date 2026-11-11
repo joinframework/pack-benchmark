@@ -126,5 +126,5 @@ struct MsgpackCxxAdapter : MsgpackCxxBase<false>
 
 struct MsgpackCxxRefAdapter : MsgpackCxxBase<true>
 {
-    static constexpr std::string_view name = "msgpack-cxx (zero-copy)";
+    static constexpr std::string_view name = "msgpack-cxx/zero-copy";
 };

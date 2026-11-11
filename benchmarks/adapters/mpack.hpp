@@ -162,7 +162,7 @@ namespace mpack_detail
 
 struct MpackZeroCopyAdapter
 {
-    static constexpr std::string_view name = "mpack (zero-copy)";
+    static constexpr std::string_view name = "mpack/zero-copy";
 
     using Document = std::unique_ptr<mpack_tree_t, mpack_detail::TreeDeleter>;
 

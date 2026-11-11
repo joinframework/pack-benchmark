@@ -5,7 +5,7 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
     googlebenchmark
     GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG        v1.8.4
+    GIT_TAG        v1.10.0
     GIT_SHALLOW    TRUE
 )
 set(BENCHMARK_ENABLE_TESTING     OFF CACHE BOOL "" FORCE)
@@ -46,7 +46,7 @@ target_include_directories(join_pack PUBLIC ${dconv_SOURCE_DIR}/dconv/include)
 FetchContent_Declare(
     msgpack_cxx
     GIT_REPOSITORY https://github.com/msgpack/msgpack-c.git
-    GIT_TAG        cpp-7.0.0
+    GIT_TAG        cpp-9.0.0
     GIT_SHALLOW    TRUE
     SOURCE_SUBDIR  none
 )
@@ -73,7 +73,7 @@ target_compile_definitions(mpack PUBLIC MPACK_EXTENSIONS=1)
 FetchContent_Declare(
     nlohmann_json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG        v3.11.3
+    GIT_TAG        v3.12.0
     GIT_SHALLOW    TRUE
 )
 set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
@@ -83,7 +83,7 @@ FetchContent_MakeAvailable(nlohmann_json)
 FetchContent_Declare(
     taocpp_pegtl
     GIT_REPOSITORY https://github.com/taocpp/PEGTL.git
-    GIT_TAG        3.2.8
+    GIT_TAG        3.2.9
     GIT_SHALLOW    TRUE
     SOURCE_SUBDIR  none
 )
@@ -108,7 +108,7 @@ target_link_libraries(taocpp_json_iface INTERFACE taocpp::pegtl)
 FetchContent_Declare(
     jsoncons
     GIT_REPOSITORY https://github.com/danielaparker/jsoncons.git
-    GIT_TAG        v0.176.0
+    GIT_TAG        v1.10.0
     GIT_SHALLOW    TRUE
     SOURCE_SUBDIR  none
 )
