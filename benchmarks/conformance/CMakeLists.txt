@@ -1,0 +1,5 @@
+add_executable(conformance main.cpp)
+target_include_directories(conformance PRIVATE ${CMAKE_SOURCE_DIR}/benchmarks)
+target_compile_definitions(conformance PRIVATE DATA_DIR="${CMAKE_SOURCE_DIR}/data")
+target_link_libraries(conformance PRIVATE ${PACK_BENCH_LIBS})
+target_compile_options(conformance PRIVATE -Wall -Wextra)
