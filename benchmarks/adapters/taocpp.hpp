@@ -11,8 +11,7 @@
 
 namespace taocpp_detail
 {
-
-    inline void gen_stat (Stat& stat, const tao::json::value& v)
+    STAT_WALK inline void gen_stat (Stat& stat, const tao::json::value& v)
     {
         switch (v.type ())
         {
@@ -54,9 +53,13 @@ namespace taocpp_detail
 
             case tao::json::type::BOOLEAN:
                 if (v.get_boolean ())
+                {
                     stat.true_count++;
+                }
                 else
+                {
                     stat.false_count++;
+                }
                 break;
 
             case tao::json::type::NULL_:
@@ -67,7 +70,6 @@ namespace taocpp_detail
                 break;
         }
     }
-
 }
 
 struct TaoCppAdapter

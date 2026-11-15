@@ -41,11 +41,15 @@ struct OutputStreambuf : std::streambuf
     void grow (size_t n)
     {
         if (out.size + n <= capacity)
+        {
             return;
+        }
         size_t cap = std::max (capacity * 2, out.size + n);
         char* data = static_cast<char*> (std::realloc (out.data.get (), cap));
         if (data == nullptr)
+        {
             throw std::bad_alloc ();
+        }
         out.data.release ();
         out.data.reset (data);
         capacity = cap;
@@ -72,20 +76,10 @@ struct OutputStreambuf : std::streambuf
 
 namespace join_detail
 {
-
-    inline void gen_stat (Stat& stat, const join::Value& v)
+    STAT_WALK inline void gen_stat (Stat& stat, const join::Value& v)
     {
         switch (v.index ())
         {
-            case join::Value::ArrayValue:
-                stat.array_count++;
-                for (auto& elem : v.getArray ())
-                {
-                    ++stat.element_count;
-                    gen_stat (stat, elem);
-                }
-                break;
-
             case join::Value::ObjectValue:
                 stat.object_count++;
                 for (auto& [key, val] : v.getObject ())
@@ -93,6 +87,15 @@ namespace join_detail
                     ++stat.member_count;
                     gen_stat (stat, key);
                     gen_stat (stat, val);
+                }
+                break;
+
+            case join::Value::ArrayValue:
+                stat.array_count++;
+                for (auto& elem : v.getArray ())
+                {
+                    ++stat.element_count;
+                    gen_stat (stat, elem);
                 }
                 break;
 
@@ -111,9 +114,13 @@ namespace join_detail
 
             case join::Value::BooleanValue:
                 if (v.isTrue ())
+                {
                     stat.true_count++;
+                }
                 else
+                {
                     stat.false_count++;
+                }
                 break;
 
             case join::Value::NullValue:
@@ -121,20 +128,20 @@ namespace join_detail
                 break;
         }
     }
-
 }
 
-struct JoinAdapter
+template <typename Reader>
+struct JoinBase
 {
-    static constexpr std::string_view name = "join";
-
     using Document = join::Value;
 
     static std::optional<Document> parse (std::string_view msgpack)
     {
         Document doc;
-        if (doc.deserialize<join::PackReader> (msgpack.data (), msgpack.size ()) == -1)
+        if (doc.deserialize<Reader> (msgpack.data (), msgpack.size ()) == -1)
+        {
             return std::nullopt;
+        }
         return doc;
     }
 
@@ -160,7 +167,16 @@ struct JoinAdapter
 
     static bool accepts (std::string_view msgpack)
     {
-        Document doc;
-        return doc.deserialize<join::PackReader> (msgpack.data (), msgpack.size ()) != -1;
+        return parse (msgpack).has_value ();
     }
+};
+
+struct JoinAdapter : JoinBase<join::PackReader>
+{
+    static constexpr std::string_view name = "join";
+};
+
+struct JoinZeroCopyAdapter : JoinBase<join::BasicPackReader<join::PackReadMode::ZeroCopy>>
+{
+    static constexpr std::string_view name = "join/zero-copy";
 };

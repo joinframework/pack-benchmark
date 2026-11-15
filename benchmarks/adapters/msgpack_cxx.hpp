@@ -12,8 +12,7 @@
 
 namespace msgpack_cxx_detail
 {
-
-    inline void gen_stat (Stat& stat, const msgpack::object& v)
+    STAT_WALK inline void gen_stat (Stat& stat, const msgpack::object& v)
     {
         switch (v.type)
         {
@@ -50,9 +49,13 @@ namespace msgpack_cxx_detail
 
             case msgpack::type::BOOLEAN:
                 if (v.via.boolean)
+                {
                     stat.true_count++;
+                }
                 else
+                {
                     stat.false_count++;
+                }
                 break;
 
             case msgpack::type::NIL:
@@ -63,7 +66,6 @@ namespace msgpack_cxx_detail
                 break;
         }
     }
-
 }
 
 template <bool ZeroCopy>
@@ -85,7 +87,9 @@ struct MsgpackCxxBase
             Document doc =
                 msgpack::unpack (msgpack.data (), msgpack.size (), offset, referenced, ZeroCopy ? reference : nullptr);
             if (offset != msgpack.size ())
+            {
                 return std::nullopt;
+            }
             return doc;
         }
         catch (...)

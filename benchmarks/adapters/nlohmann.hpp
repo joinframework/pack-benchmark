@@ -10,8 +10,7 @@
 
 namespace nlohmann_detail
 {
-
-    inline void gen_stat (Stat& stat, const nlohmann::json& v)
+    STAT_WALK inline void gen_stat (Stat& stat, const nlohmann::json& v)
     {
         switch (v.type ())
         {
@@ -48,9 +47,13 @@ namespace nlohmann_detail
 
             case nlohmann::json::value_t::boolean:
                 if (v.get<bool> ())
+                {
                     stat.true_count++;
+                }
                 else
+                {
                     stat.false_count++;
+                }
                 break;
 
             case nlohmann::json::value_t::null:
@@ -61,7 +64,6 @@ namespace nlohmann_detail
                 break;
         }
     }
-
 }
 
 struct NlohmannAdapter
@@ -74,7 +76,9 @@ struct NlohmannAdapter
     {
         Document doc = Document::from_msgpack (msgpack, true, false);
         if (doc.is_discarded ())
+        {
             return std::nullopt;
+        }
         return doc;
     }
 

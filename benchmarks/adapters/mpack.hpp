@@ -13,7 +13,6 @@
 
 namespace mpack_detail
 {
-
     struct TreeDeleter
     {
         void operator() (mpack_tree_t* tree) const noexcept
@@ -23,7 +22,7 @@ namespace mpack_detail
         }
     };
 
-    inline void gen_stat (Stat& stat, mpack_node_t v)
+    STAT_WALK inline void gen_stat (Stat& stat, mpack_node_t v)
     {
         switch (mpack_node_type (v))
         {
@@ -64,9 +63,13 @@ namespace mpack_detail
 
             case mpack_type_bool:
                 if (mpack_node_bool (v))
+                {
                     stat.true_count++;
+                }
                 else
+                {
                     stat.false_count++;
+                }
                 break;
 
             case mpack_type_nil:
@@ -99,7 +102,9 @@ namespace mpack_detail
                     size_t length = mpack_node_array_length (v);
                     mpack_start_array (writer, static_cast<uint32_t> (length));
                     for (size_t i = 0; i < length; ++i)
+                    {
                         write (writer, mpack_node_array_at (v, i));
+                    }
                     mpack_finish_array (writer);
                     break;
                 }
@@ -157,7 +162,6 @@ namespace mpack_detail
         std::unique_ptr<char, FreeDeleter> data;
         size_t size = 0;
     };
-
 }
 
 struct MpackZeroCopyAdapter
@@ -172,7 +176,9 @@ struct MpackZeroCopyAdapter
         mpack_tree_init_data (doc.get (), msgpack.data (), msgpack.size ());
         mpack_tree_parse (doc.get ());
         if (mpack_tree_error (doc.get ()) != mpack_ok || mpack_tree_size (doc.get ()) != msgpack.size ())
+        {
             return std::nullopt;
+        }
         return doc;
     }
 

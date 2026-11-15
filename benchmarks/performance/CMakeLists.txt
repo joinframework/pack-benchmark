@@ -26,6 +26,11 @@ add_pack_benches(join adapters/join.hpp join::pack
     SERIALIZE  JoinAdapter
     STATISTICS JoinAdapter
 )
+add_pack_benches(join_zero_copy adapters/join.hpp join::pack
+    PARSE      JoinZeroCopyAdapter
+    SERIALIZE  JoinZeroCopyAdapter
+    STATISTICS JoinZeroCopyAdapter
+)
 add_pack_benches(jsoncons adapters/jsoncons.hpp jsoncons::jsoncons
     PARSE      JsonConsAdapter
     SERIALIZE  JsonConsAdapter
