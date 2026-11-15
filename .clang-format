@@ -45,6 +45,7 @@ AlignConsecutiveDeclarations: None
 # --- Switch/Case ---
 IndentCaseLabels: true
 IndentCaseBlocks: true
+InsertBraces: true
 
 # --- Strict Vertical Layout ---
 AllowShortFunctionsOnASingleLine: None

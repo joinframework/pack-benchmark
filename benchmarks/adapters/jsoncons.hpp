@@ -12,51 +12,55 @@
 
 namespace jsoncons_detail
 {
-
-    inline void gen_stat (Stat& stat, const jsoncons::json& v)
+    STAT_WALK inline void gen_stat (Stat& stat, const jsoncons::json& v)
     {
-        if (v.is_object ())
+        switch (v.type ())
         {
-            stat.object_count++;
-            for (auto& kv : v.object_range ())
-            {
-                ++stat.member_count;
-                ++stat.string_count;
-                stat.string_length += kv.key ().size ();
-                gen_stat (stat, kv.value ());
-            }
-        }
-        else if (v.is_array ())
-        {
-            stat.array_count++;
-            for (auto& elem : v.array_range ())
-            {
-                ++stat.element_count;
-                gen_stat (stat, elem);
-            }
-        }
-        else if (v.is_number ())
-        {
-            stat.number_count++;
-        }
-        else if (v.is_string ())
-        {
-            stat.string_count++;
-            stat.string_length += v.as_string_view ().size ();
-        }
-        else if (v.is_bool ())
-        {
-            if (v.as<bool> ())
-                stat.true_count++;
-            else
-                stat.false_count++;
-        }
-        else if (v.is_null ())
-        {
-            stat.null_count++;
+            case jsoncons::json_type::object:
+                stat.object_count++;
+                for (auto& kv : v.object_range ())
+                {
+                    ++stat.member_count;
+                    ++stat.string_count;
+                    stat.string_length += kv.key ().size ();
+                    gen_stat (stat, kv.value ());
+                }
+                break;
+            case jsoncons::json_type::array:
+                stat.array_count++;
+                for (auto& elem : v.array_range ())
+                {
+                    ++stat.element_count;
+                    gen_stat (stat, elem);
+                }
+                break;
+            case jsoncons::json_type::string:
+                stat.string_count++;
+                stat.string_length += v.as_string_view ().size ();
+                break;
+            case jsoncons::json_type::int64:
+            case jsoncons::json_type::uint64:
+            case jsoncons::json_type::float16:
+            case jsoncons::json_type::float64:
+                stat.number_count++;
+                break;
+            case jsoncons::json_type::boolean:
+                if (v.as<bool> ())
+                {
+                    stat.true_count++;
+                }
+                else
+                {
+                    stat.false_count++;
+                }
+                break;
+            case jsoncons::json_type::null:
+                stat.null_count++;
+                break;
+            default:
+                break;
         }
     }
-
 }
 
 struct JsonConsAdapter
@@ -74,7 +78,9 @@ struct JsonConsAdapter
             std::error_code ec;
             reader.read (ec);
             if (ec || !decoder.is_valid () || reader.column () != msgpack.size ())
+            {
                 return std::nullopt;
+            }
             return decoder.get_result ();
         }
         catch (...)

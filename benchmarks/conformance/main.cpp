@@ -59,13 +59,21 @@ static std::string hex (std::string_view text)
     {
         int digit;
         if (c >= '0' && c <= '9')
+        {
             digit = c - '0';
+        }
         else if (c >= 'a' && c <= 'f')
+        {
             digit = c - 'a' + 10;
+        }
         else
+        {
             continue;
+        }
         if (high < 0)
+        {
             high = digit;
+        }
         else
         {
             bytes.push_back (static_cast<char> (high * 16 + digit));
@@ -249,7 +257,9 @@ public:
     {
         Node node;
         if (!value (node) || _pos != _in.size ())
+        {
             return std::nullopt;
+        }
         return node;
     }
 
@@ -257,7 +267,9 @@ private:
     bool take (uint64_t size, std::string_view& out)
     {
         if (size > _in.size () - _pos)
+        {
             return false;
+        }
         out = _in.substr (_pos, size);
         _pos += size;
         return true;
@@ -267,10 +279,14 @@ private:
     {
         std::string_view raw;
         if (!take (width, raw))
+        {
             return false;
+        }
         out = 0;
         for (char c : raw)
+        {
             out = (out << 8) | static_cast<uint8_t> (c);
+        }
         return true;
     }
 
@@ -278,7 +294,9 @@ private:
     {
         uint64_t raw;
         if (!number (width, raw))
+        {
             return false;
+        }
         int shift = static_cast<int> (64 - 8 * width);
         int64_t value = static_cast<int64_t> (raw << shift) >> shift;
         if (sign && value < 0)
@@ -298,7 +316,9 @@ private:
     {
         uint64_t raw;
         if (!number (width, raw))
+        {
             return false;
+        }
         node.kind = Node::Float;
         if (width == 4)
         {
@@ -308,7 +328,9 @@ private:
             node.real = f;
         }
         else
+        {
             std::memcpy (&node.real, &raw, 8);
+        }
         return true;
     }
 
@@ -316,7 +338,9 @@ private:
     {
         std::string_view raw;
         if (!take (size, raw))
+        {
             return false;
+        }
         node.kind = kind;
         node.bytes = raw;
         return true;
@@ -332,7 +356,9 @@ private:
     {
         uint64_t type;
         if (!number (1, type))
+        {
             return false;
+        }
         node.ext_type = static_cast<int8_t> (type);
         return data (node, Node::Ext, size);
     }
@@ -340,13 +366,17 @@ private:
     bool array (Node& node, uint64_t count)
     {
         if (count > _in.size () - _pos)
+        {
             return false;
+        }
         node.kind = Node::Array;
         node.items.resize (count);
         for (auto& item : node.items)
         {
             if (!value (item))
+            {
                 return false;
+            }
         }
         return true;
     }
@@ -354,13 +384,17 @@ private:
     bool map (Node& node, uint64_t count)
     {
         if (count > (_in.size () - _pos) / 2)
+        {
             return false;
+        }
         node.kind = Node::Map;
         node.members.resize (count);
         for (auto& [key, val] : node.members)
         {
             if (!value (key) || !value (val))
+            {
                 return false;
+            }
         }
         return true;
     }
@@ -369,7 +403,9 @@ private:
     {
         uint64_t head, count;
         if (!number (1, head))
+        {
             return false;
+        }
         if (head <= 0x7f)
         {
             node.kind = Node::Uint;
@@ -383,11 +419,17 @@ private:
             return true;
         }
         if (head <= 0x8f)
+        {
             return map (node, head & 0x0f);
+        }
         if (head <= 0x9f)
+        {
             return array (node, head & 0x0f);
+        }
         if (head <= 0xbf)
+        {
             return data (node, Node::Str, head & 0x1f);
+        }
         switch (head)
         {
             case 0xc0:
@@ -466,7 +508,9 @@ private:
 static bool same_value (const Node& a, const Node& b)
 {
     if (a.kind != b.kind)
+    {
         return false;
+    }
     switch (a.kind)
     {
         case Node::Nil:
@@ -486,23 +530,33 @@ static bool same_value (const Node& a, const Node& b)
             return a.ext_type == b.ext_type && a.bytes == b.bytes;
         case Node::Array:
             if (a.items.size () != b.items.size ())
+            {
                 return false;
+            }
             for (size_t i = 0; i < a.items.size (); ++i)
             {
                 if (!same_value (a.items[i], b.items[i]))
+                {
                     return false;
+                }
             }
             return true;
         case Node::Map:
             if (a.members.size () != b.members.size ())
+            {
                 return false;
+            }
             for (auto& [key, val] : a.members)
             {
                 bool found = false;
                 for (size_t j = 0; j < b.members.size () && !found; ++j)
+                {
                     found = same_value (key, b.members[j].first) && same_value (val, b.members[j].second);
+                }
                 if (!found)
+                {
                     return false;
+                }
             }
             return true;
     }
@@ -520,20 +574,28 @@ template <typename Adapter, typename Output>
 std::string_view output_view (const Output& output)
 {
     if constexpr (std::is_convertible_v<const Output&, std::string_view>)
+    {
         return output;
+    }
     else
+    {
         return Adapter::view (output);
+    }
 }
 
 static void count (Score& score, bool ok, bool verbose, const char* what, const std::string& name)
 {
     if (ok)
+    {
         score.pass++;
+    }
     else
     {
         score.fail++;
         if (verbose)
+        {
             std::cerr << "  [FAIL] " << what << ": " << name << "\n";
+        }
     }
 }
 
@@ -553,7 +615,9 @@ template <typename Adapter>
 void run_invalid (Result& r, const std::vector<Case>& cases, bool verbose)
 {
     for (auto& c : cases)
+    {
         count (r.reject, !Adapter::accepts (c.bytes), verbose, "should reject", c.name);
+    }
 }
 
 template <typename Adapter>
@@ -576,14 +640,20 @@ bool run_output_check (const std::vector<std::string>& files, std::vector<std::o
         }
         auto stat = Adapter::statistics (*doc);
         if (!reference[i])
+        {
             reference[i] = stat;
+        }
         else if (!(stat == *reference[i]))
+        {
             fail (files[i], "statistics");
+        }
         auto result = Adapter::serialize (*doc);
         auto output = output_view<Adapter> (result);
         auto reparsed = Adapter::parse (output);
         if (!reparsed || !(Adapter::statistics (*reparsed) == stat) || !same_document (msgpack, output))
+        {
             fail (files[i], "serialize");
+        }
     }
     return ok;
 }
@@ -592,7 +662,9 @@ static void print_header ()
 {
     std::cout << std::left << std::setw (25) << "Library" << std::right;
     for (const char* label : {"Core", "Core RT", "Bin/Ext", "Bin/Ext RT", "Keys", "Keys RT", "Reject"})
+    {
         std::cout << std::setw (12) << label;
+    }
     std::cout << "\n" << std::string (109, '-') << "\n";
 }
 
@@ -605,7 +677,9 @@ static void print_row (const std::string& name, const Result& r)
 {
     std::cout << std::left << std::setw (25) << name << std::right;
     for (int c = Core; c < Malformed; ++c)
+    {
         std::cout << std::setw (12) << fmt (r.accept[c]) << std::setw (12) << fmt (r.roundtrip[c]);
+    }
     std::cout << std::setw (12) << fmt (r.reject) << "\n";
 }
 
@@ -630,7 +704,9 @@ static void write_json (const std::string& output_path, const std::vector<std::p
         kv ("reject", r.reject);
         out << "\n    }";
         if (i + 1 < all.size ())
+        {
             out << ",";
+        }
         out << "\n";
     }
     out << "  ]\n}\n";
@@ -645,9 +721,13 @@ int main (int argc, char* argv[])
     {
         std::string arg (argv[i]);
         if (arg == "-v")
+        {
             verbose = true;
+        }
         else if (arg == "--output" && i + 1 < argc)
+        {
             output_path = argv[++i];
+        }
     }
 
     const fs::path data_dir = DATA_DIR;
@@ -656,7 +736,9 @@ int main (int argc, char* argv[])
 
     std::vector<std::string> check_files;
     for (const char* name : {"canada.msgpack", "citm_catalog.msgpack", "twitter.msgpack"})
+    {
         check_files.push_back ((data_dir / name).string ());
+    }
     std::vector<std::optional<Stat>> reference (check_files.size ());
     bool outputs_ok = true;
 
@@ -669,7 +751,9 @@ int main (int argc, char* argv[])
         using Adapter = decltype (adapter);
         std::string name{Adapter::name};
         if (verbose)
+        {
             std::cout << "\n[" << name << "]\n";
+        }
 
         Result r;
         run_valid<Adapter> (r, valid, verbose);
@@ -680,6 +764,7 @@ int main (int argc, char* argv[])
     };
 
     run (JoinAdapter{});
+    run (JoinZeroCopyAdapter{});
     run (JsonConsAdapter{});
     run (MpackZeroCopyAdapter{});
     run (MsgpackCxxAdapter{});
@@ -690,7 +775,9 @@ int main (int argc, char* argv[])
     std::cout << "\n";
 
     if (!output_path.empty ())
+    {
         write_json (output_path, all_results);
+    }
 
     return outputs_ok ? 0 : 1;
 }

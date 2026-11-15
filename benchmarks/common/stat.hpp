@@ -2,6 +2,9 @@
 
 #include <cstddef>
 
+/// statistics walk compiled without jump tables, so that every library gets the same control flow.
+#define STAT_WALK __attribute__ ((optimize ("no-jump-tables")))
+
 struct Stat
 {
     std::size_t object_count = 0;
